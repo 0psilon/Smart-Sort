@@ -1,5 +1,6 @@
 import io
 import os
+import random
 
 import numpy as np
 import onnxruntime as ort
@@ -44,6 +45,25 @@ def predict_class(message):
         message.chat.id,
         text=f'Предсказанный класс: <b>{CLASSES[ort_outs[0].argmax()]}</b>',
         parse_mode='html'
+    )
+
+
+@bot.message_handler(content_types=['text'])
+def get_user_text(message):
+    """
+    Обработка текстовых сообщений
+    """
+    if message.text in ['❤️', '❤️❤️', '❤️❤️❤️']:
+        to_send = '❤️' * random.choice([1, 3])
+
+    else:
+        to_send = 'К сожалению, я тебя не понимаю '
+        to_send += random.choice(['😿', '😭', '😤', '😇', '😅'])
+        to_send += '\n\nОзнакомиться с инструкцией можно в меню тг-бота!'
+
+    bot.send_message(
+        message.chat.id,
+        text=to_send
     )
 
 
