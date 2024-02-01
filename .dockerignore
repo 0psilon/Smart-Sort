@@ -1,0 +1,7 @@
+__pycache__/
+venv/
+weights/SmartSort_11.pt
+.env_example
+.gitignore
+*.jpeg
+*.ipynb
