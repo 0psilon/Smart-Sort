@@ -45,25 +45,36 @@ def predict_class(message):
         message.chat.id,
         text=random.choice(MESSAGE_TEXTS)
     )
-    # downloading
-    file_info = bot.get_file(message.photo[-1].file_id)
-    dwn_file = bot.download_file(file_info.file_path)
-    # image preprocessing
-    byte_obj = io.BytesIO(dwn_file)
-    img = Image.open(byte_obj)
-    img = np.array(img, dtype=np.float32)
-    img = TRANSFORM(image=img)['image']
-    img = np.transpose(img, (2, 0, 1))
-    # model inference
-    ort_inputs = {'input': img[None, ...]}
-    ort_outs = ort_session.run(None, ort_inputs)
+    try:
+        # downloading
+        file_info = bot.get_file(message.photo[-1].file_id)
+        dwn_file = bot.download_file(file_info.file_path)
+        # image preprocessing
+        byte_obj = io.BytesIO(dwn_file)
+        img = Image.open(byte_obj)
+        img = np.array(img, dtype=np.float32)
+        img = TRANSFORM(image=img)['image']
+        img = np.transpose(img, (2, 0, 1))
+        # model inference
+        ort_inputs = {'input': img[None, ...]}
+        ort_outs = ort_session.run(None, ort_inputs)
+    
+    except Exception as e:
+        print(e)
 
-    bot.edit_message_text(
-        text=f'Предсказанный класс: <b>{CLASSES[ort_outs[0].argmax()]}</b>',
-        chat_id=message.chat.id,
-        message_id=message_to_edit.message_id,
-        parse_mode='html'
-    )
+        bot.edit_message_text(
+            text='К сожалению, что-то пошло не так. Попробуй еще раз!',
+            chat_id=message.chat.id,
+            message_id=message_to_edit.message_id,
+        )
+    
+    else:
+        bot.edit_message_text(
+            text=f'Предсказанный класс: <b>{CLASSES[ort_outs[0].argmax()]}</b>',
+            chat_id=message.chat.id,
+            message_id=message_to_edit.message_id,
+            parse_mode='html'
+        )
 
 
 @bot.message_handler(commands=['hint'])
