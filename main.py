@@ -45,6 +45,7 @@ def predict_class(message):
         message.chat.id,
         text=random.choice(MESSAGE_TEXTS)
     )
+
     try:
         # downloading
         file_info = bot.get_file(message.photo[-1].file_id)
@@ -105,7 +106,7 @@ def get_user_text(message):
     else:
         to_send = 'К сожалению, я тебя не понимаю '
         to_send += random.choice(['😿', '😭', '😤', '😇', '😅'])
-        to_send += '\n\nОзнакомиться с инструкцией можно в меню тг-бота!'
+        to_send += '\n\nОзнакомиться с инструкцией можно в меню!'
 
     bot.send_message(
         message.chat.id,
