@@ -5,3 +5,5 @@ weights/SmartSort_11.pt
 .gitignore
 *.jpeg
 *.ipynb
+notebooks/
+archives/

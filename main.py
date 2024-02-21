@@ -8,13 +8,14 @@ import telebot
 from dotenv import load_dotenv
 from PIL import Image
 from telebot import types
+from telebot.util import quick_markup
 
-from utils import CLASSES, HINTS, MESSAGE_TEXTS, PATH_TO_MODEL, TRANSFORM
+from utils import CLASSES, MESSAGE_TEXTS, PATH_TO_MODEL, PLASTICS, TRANSFORM
 
 load_dotenv()
 
 tg_token = os.getenv('tg_token')
-bot = telebot.TeleBot(tg_token, num_threads=4)
+bot = telebot.TeleBot(tg_token)
 
 # menu buttons
 bot.set_my_commands([
@@ -81,18 +82,97 @@ def predict_class(message):
 @bot.message_handler(commands=['hint'])
 def hint(message):
     """
-    Randomly chooses and sends a text
-    from the texts/hints directory
-    """
-    file_path = random.choice(HINTS)
-    with open(file_path, 'r') as f:
-        to_send = f.read()
+    Provides a message with markup buttons
+    """    
+    to_send = 'Что могло бы тебя заинтересовать?'
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    options = [
+        types.InlineKeyboardButton('Стекло 🥛', callback_data='glass'),
+        types.InlineKeyboardButton('Пластик 🥤', callback_data='plastic'),
+        types.InlineKeyboardButton('Бумага 📄', callback_data='paper'),
+        types.InlineKeyboardButton('Картон 📦', callback_data='cardboard'),
+        types.InlineKeyboardButton('Металл 🥫', callback_data='metal'),
+        types.InlineKeyboardButton('Батарейки 🔋', callback_data='batteries'),
+    ]
+    option_1 = types.InlineKeyboardButton('Пищевые отходы 🌭', callback_data='food')
+    option_2 = types.InlineKeyboardButton('Стаканчик из-под кофе 🧋', callback_data='coffee')
+    option_3 = types.InlineKeyboardButton('Остальные отходы 🤔', callback_data='miscellaneous')
+
+    markup.add(*options)
+    markup.add(option_1)
+    markup.add(option_2)
+    markup.add(option_3)
 
     bot.send_message(
         message.chat.id,
         text=to_send,
+        reply_markup=markup,
         parse_mode='html'
     )
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback(call):
+    """
+    Keeps track of callback data and
+    sends messages back to a user
+    """
+    if call.data == 'plastic':
+        to_send = 'Какой из видов пластика тебя интересует?'
+        markup = quick_markup({
+            'PET (1)': {'callback_data': 'pet'},
+            'HDPE (2)': {'callback_data': 'hdpe'},
+            'PVC (3)': {'callback_data': 'pvc'},
+            'LDPE (4)': {'callback_data': 'ldpe'},
+            'PP (5)': {'callback_data': 'pp'},
+            'PS (6)': {'callback_data': 'ps'},
+            'O (7)': {'callback_data': 'o'},
+        })
+
+        bot.send_message(
+            call.message.chat.id,
+            text=to_send,
+            reply_markup=markup,
+            parse_mode='html'
+        )        
+
+    elif call.data == 'batteries':
+        with open(f'texts/hints/{call.data}/0.txt', 'r') as f:
+            to_send = f.read()
+        
+        markup = types.InlineKeyboardMarkup()
+        option = types.InlineKeyboardButton(
+            text='Куда сдать опасные отходы',
+            url='https://www.gov.spb.ru/gov/otrasl/ecology/ekomobil/'
+        )
+        markup.add(option)
+
+        bot.send_message(
+            call.message.chat.id,
+            text=to_send,
+            reply_markup=markup,
+            parse_mode='html'
+        )
+    
+    elif call.data in PLASTICS:
+        with open(f'texts/hints/plastic/{call.data}.txt', 'r') as f:
+            to_send = f.read()
+        
+        bot.send_message(
+            call.message.chat.id,
+            text=to_send,
+            parse_mode='html'
+        )
+
+    else:
+        with open(f'texts/hints/{call.data}/0.txt', 'r') as f:
+            to_send = f.read()
+        
+        bot.send_message(
+            call.message.chat.id,
+            text=to_send,
+            parse_mode='html'
+        )
 
 
 @bot.message_handler(content_types=['text'])
