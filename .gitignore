@@ -5,5 +5,5 @@ __pycache__/
 *.onnx
 *.jpeg
 test.ipynb
-notebooks/
-archives/
+notebooks/unziped/
+*.zip
